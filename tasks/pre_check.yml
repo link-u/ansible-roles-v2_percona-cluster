@@ -1,0 +1,97 @@
+---
+# tasks/pre_check.yml (percona-cluster)
+# Prefix : pxc
+
+- name: Check for deleted variables
+  shell: >-
+    echo "[WARNING]: 以下の変数は削除されました. 以下の URL を確認してください. @y_hashida";
+    echo "    https://github.com/link-u/ansible-roles-v2_percona-cluster/blob/master/README.md#削除された変数の一覧";
+    {% if percona_cluster_additional_white_ip_list is defined %}
+      echo "percona_cluster_additional_white_ip_list";
+    {% endif %}
+  register: __pxc_check_deleted_vars
+  check_mode: no
+  changed_when:
+    - (__pxc_check_deleted_vars.stdout_lines | length) != 2
+  notify: "Print warning for percona-cluster (Check for deleted variables)"
+
+- name: Check for changed variables
+  shell: >-
+    echo "[WARNING]: 以下の変数は将来変更される予定です. 以下のように修正を推奨します. @y_hashida";
+    echo "    https://github.com/link-u/ansible-roles-v2_percona-cluster/blob/master/README.md#変更された変数の一覧";
+    {% if percona_cluster_version is defined %}
+      echo "percona_cluster_version → pxc_version";
+    {% endif %}
+
+    {% if percona_cluster_package_name is defined %}
+      echo "percona_cluster_package_name → pxc_package_name";
+    {% endif %}
+
+    {% if percona_cluster_mycnf_path is defined %}
+      echo "percona_cluster_mycnf_path → pxc_mycnf_path";
+    {% endif %}
+
+    {% if percona_cluster_root_password is defined %}
+      echo "percona_cluster_root_password → pxc_root_password";
+    {% endif %}
+
+    {% if percona_cluster_pid_file is defined %}
+      echo "percona_cluster_pid_file → pxc_pid_file";
+    {% endif %}
+
+    {% if percona_cluster_socket is defined %}
+      echo "percona_cluster_socket → pxc_socket";
+    {% endif %}
+
+    {% if percona_cluster_name is defined %}
+      echo "percona_cluster_name → pxc_name";
+    {% endif %}
+
+    {% if percona_cluster_sst_user is defined %}
+      echo "percona_cluster_sst_user → pxc_sst_user";
+    {% endif %}
+
+    {% if percona_cluster_sst_password is defined %}
+      echo "percona_cluster_sst_password → pxc_sst_password";
+    {% endif %}
+
+    {% if percona_cluster_hosts is defined %}
+      echo "percona_cluster_hosts → pxc_hosts";
+    {% endif %}
+
+    {% if percona_cluster_host_ips is defined %}
+      echo "percona_cluster_host_ips → pxc_host_ips";
+    {% endif %}
+
+    {% if percona_cluster_is_clustered is defined %}
+      echo "percona_cluster_is_clustered → pxc_is_clustered";
+    {% endif %}
+
+    {% if percona_cluster_enable_innodb_numa_interleave is defined %}
+      echo "percona_cluster_enable_innodb_numa_interleave → pxc_enable_innodb_numa_interleave";
+    {% endif %}
+
+    {% if percona_cluster_users is defined %}
+      echo "percona_cluster_users → pxc_users";
+    {% endif %}
+
+    {% if percona_cluster_databases is defined %}
+      echo "percona_cluster_databases → pxc_databases";
+    {% endif %}
+
+    {% if percona_cluster_clustering_settings is defined %}
+      echo "percona_cluster_clustering_settings → pxc_clustering_settings";
+    {% endif %}
+
+    {% if percona_cluster_mycnf_settings is defined %}
+      echo "percona_cluster_mycnf_settings → pxc_mycnf_settings";
+    {% endif %}
+
+    {% if percona_cluster_general_settings is defined %}
+      echo "percona_cluster_general_settings → pxc_general_settings";
+    {% endif %}
+  register: __pxc_check_changed_vars
+  check_mode: no
+  changed_when:
+    - (__pxc_check_changed_vars.stdout_lines | length) != 2
+  notify: "Print warning for percona-cluster (Check for changed variables)"

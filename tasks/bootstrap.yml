@@ -1,0 +1,94 @@
+---
+## tasks/bootstrap.yml (percona-cluster)
+# Prefix : pxc
+
+- name: Settings if clustering mode
+  block:
+    - name: Check default password for SST user
+      debug:
+        msg: "Please change password for SST user from default"
+      failed_when: True
+      when:
+        - pxc_sst_password == "default&sst&password"
+
+    - name: Search existing nodes (using ping)
+      shell: ping "{{ pxc_host_ips[_idx] }}" -c 3 > /dev/null 2>&1; echo $?
+      register: check_existing_nodes
+      loop: "{{ pxc_hosts }}"
+      loop_control:
+        index_var: _idx
+      changed_when: False
+      check_mode: no
+
+    - name: Set fact _existing_nodes_list
+      set_fact:
+        _existing_nodes_list: >-
+          {{
+            check_existing_nodes.results |
+            selectattr('stdout', 'eq', '0') |
+            map(attribute='item') |
+            list
+          }}
+
+    - name: Check safe_to_bootstrap in grastate.dat
+      shell: grep 'safe_to_bootstrap' "{{ __pxc_combined_clustering_settings.wsrep_data_home_dir }}/grastate.dat" | grep '1' > /dev/null 2>&1; echo $?
+      register: check_safe_to_bootstrap
+      delegate_to: "{{ item }}"
+      loop: "{{ _existing_nodes_list }}"
+      changed_when: False
+      check_mode: no
+
+    - name: Set fact _safe_to_bootstrap_nodes_list
+      set_fact:
+        _safe_to_bootstrap_nodes_list: >-
+          {{
+            check_safe_to_bootstrap.results |
+            selectattr('stdout', 'eq', '0') |
+            map(attribute='item') |
+            sort
+          }}
+
+    - name: Check if donor node is exist.
+      shell: ss -antup | grep '0.0.0.0:4567' | wc -l
+      register: check_donor
+      delegate_to: "{{ item }}"
+      loop: "{{ _existing_nodes_list }}"
+      changed_when: False
+      check_mode: no
+
+    - name: Settings first node
+      block:
+        - name: Startup first node
+          command: /etc/init.d/mysql bootstrap-pxc
+
+        - name: Create a user for SST
+          mysql_user:
+            name: "{{ pxc_sst_user }}"
+            password: "{{ pxc_sst_password }}"
+            priv: "*.*:PROCESS,RELOAD,LOCK TABLES,REPLICATION CLIENT"
+            login_user: root
+            login_password: "{{ pxc_root_password }}"
+            login_unix_socket: "{{ pxc_socket }}"
+            login_host: "localhost"
+      when:
+        - (_safe_to_bootstrap_nodes_list | length) != 0
+        - _safe_to_bootstrap_nodes_list[0] == inventory_hostname
+        - (check_donor.results | map(attribute='stdout') | max) == '0'
+  when:
+    - pxc_is_clustered | bool
+
+## NOTE: (@y_hashid) すこし分かりづらいので補足と参考 URL を記載
+#  * systemd で mysql.service を起動する際にシリアル実行する.
+#  * 弊社の mysql (percona) では大量にメモリを割り当てているため起動時の初期化に時間がかかる.
+#  * 同時に起動して不具合を起こしたくないため, シリアル化をしている.
+#  * 参考 URL
+#    * https://qiita.com/Ets/items/5e2d7d3ca703a8a173ca
+#    * https://qiita.com/yunano/items/5deb78f0fa008d98227b
+- name: Join the slave nodes to cluster or startup as a standalone
+  systemd:
+    name: mysql.service
+    state: started
+    enabled: True
+  run_once: yes
+  delegate_to: "{{ item }}"
+  loop: "{{ ansible_play_hosts }}"
