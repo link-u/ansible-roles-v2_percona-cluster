@@ -1,0 +1,55 @@
+---
+# tasks/install.yml (percona-cluster)
+# Prefix : pxc
+
+## Install socat (our builds)
+- name: Pre-install packages
+  apt:
+    name:
+      - "gpg"
+    state: present
+    update_cache: yes
+
+- name: Trust our package maintainers.
+  apt_key:
+    id: 4DE76DC836A27DBAE17FAC4B09C9B9C18F429AAE
+    url: https://pkg.link-u.co.jp/key.asc
+    state: present
+
+- name: Add our apt repository.
+  apt_repository:
+    repo: deb https://pkg.link-u.co.jp/{{ ansible_distribution_release }} ./
+    state: present
+
+- name: Install socat
+  apt:
+    name: "socat"
+    state: present
+    update_cache: yes
+
+## Install percona-cluster
+- name: Add apt repository for Percona
+  apt:
+    deb: "http://repo.percona.com/apt/{{ pxc_package_name }}"
+  register: __pxc_add_apt_repo
+
+- name: Update apt repository
+  apt:
+    update_cache: True
+  when: __pxc_add_apt_repo.changed | bool
+
+- name: Install python module
+  apt:
+    name: python3-pymysql
+
+- name: Install Percona Xtradb Cluster
+  apt:
+    name: "percona-xtradb-cluster-{{ pxc_version }}"
+  register: installed
+
+- name: Stop percona (mysql) if just installed
+  systemd:
+    name: mysql.service
+    state: stopped
+  when:
+    - installed.changed

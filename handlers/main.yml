@@ -1,0 +1,15 @@
+---
+# handlers/main.yml (percona-cluster)
+# Prefix : pxc
+
+- name: "Print warning for percona-cluster (Check for deleted variables)"
+  debug:
+    msg: "{{ __pxc_check_deleted_vars.stdout_lines }}"
+  failed_when: yes
+  ignore_errors: yes
+
+- name: "Print warning for percona-cluster (Check for changed variables)"
+  debug:
+    msg: "{{ __pxc_check_changed_vars.stdout_lines }}"
+  failed_when: yes
+  ignore_errors: yes

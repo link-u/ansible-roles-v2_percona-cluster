@@ -1,0 +1,36 @@
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/percona-xtradb-cluster.conf.d/
+
+[mysqld]
+## clustering_settings
+{% if pxc_is_clustered | bool %}
+{% for key, value in __pxc_combined_clustering_settings.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+{% else %}
+{% for key, value in __pxc_combined_clustering_settings.items() %}
+#{{ key }} = {{ value }}
+{% endfor %}
+{% endif %}
+
+
+## mycnf_settings
+{% for key, value in __pxc_combined_mycnf_settings.items() %}
+{% if value is iterable and value is not string %}
+{% for inValue in value %}
+{{ key }} = {{ inValue }}
+{% endfor %}
+{% else %}
+{{ key }} = {{ value }}
+{% endif %}
+{% endfor %}
+
+
+## general_settings
+{% for key, value in __pxc_combined_general_settings.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+
+
+[mysqld_safe]
+flush_caches = {{ pxc_enable_innodb_numa_interleave }}

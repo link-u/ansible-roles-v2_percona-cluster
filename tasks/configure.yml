@@ -1,0 +1,114 @@
+---
+# tasks/configure.yml (percona-cluster)
+# Prefix : pxc
+
+- name: Ensure data directories are present with proper owner
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: "0755"
+  loop:
+    - "{{ __pxc_combined_mycnf_settings['datadir'] }}"
+    - "{{ __pxc_combined_mycnf_settings['log-bin'] }}"
+    - "{{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}"
+
+- name: "Check for existing {{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}/grastate.dat"
+  stat:
+    path: "{{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}/grastate.dat"
+  register: __pxc_check_grastate_dat
+
+- name: Initialize grastate.dat
+  copy:
+    src: "/var/lib/mysql/grastate.dat"
+    dest: "{{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}/grastate.dat"
+    owner: mysql
+    group: mysql
+    remote_src: True
+    force: False
+  when:
+    - not __pxc_check_grastate_dat.stat.exists
+
+##FIXME(y-hashida): when の条件が雑すぎるので修正したい.
+- name: Ensure doublewrite directory is present with proper owner
+  file:
+    path: "{{ __pxc_combined_general_settings['innodb_parallel_doublewrite_path'] | dirname }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: "0755"
+  when:
+    - __pxc_combined_general_settings['innodb_parallel_doublewrite_path'] != "xb_doublewrite"
+
+- name: Create my.cnf
+  template:
+    src: my.cnf.j2
+    dest: "{{ pxc_mycnf_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Bootstrap cluster
+  import_tasks: bootstrap.yml
+
+- name: Check default password for root user
+  debug:
+    msg: "Please change password for root user from default"
+  failed_when: True
+  when:
+    - pxc_root_password == "default&root&password"
+
+- name: Set root password
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ pxc_root_password }}"
+    login_user: root
+    login_password: "{{ pxc_root_password }}"
+    login_unix_socket: "{{ pxc_socket }}"
+    login_host: "localhost"
+  loop:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  when:
+    - inventory_hostname == pxc_db_control_node
+
+- name: Update mysql pxc_general_settings (not required to restart)
+  mysql_variables:
+    connect_timeout: 600
+    login_user: root
+    login_password: "{{ pxc_root_password }}"
+    login_unix_socket: "{{ pxc_socket }}"
+    login_host: "localhost"
+    variable: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ __pxc_combined_general_settings | dict2items }}"
+
+- name: Create mysql users
+  mysql_user:
+    name: "{{ item[0].name }}"
+    password: "{{ item[0].password | default(item[0].name) }}"
+    host: "{{ item[1] }}"
+    priv: "{{ item[0].priv | default('*.*:ALL,GRANT') }}"
+    login_user: root
+    login_password: "{{ pxc_root_password }}"
+    login_unix_socket: "{{ pxc_socket }}"
+    login_host: "localhost"
+  loop: "{{ pxc_users | subelements('hosts') }}"
+  when:
+    - inventory_hostname == pxc_db_control_node
+
+- name: Create mysql DB
+  mysql_db:
+    name: "{{ item.name }}"
+    encoding: "{{ item.encoding | default('utf8') }}"
+    collation: "{{ item.collation | default('') }}"
+    login_user: "{{ item.login_user | default('root') }}"
+    login_password: "{{ item.login_password | default(pxc_root_password) }}"
+    login_unix_socket: "{{ pxc_socket }}"
+    login_host: "localhost"
+  loop: "{{ pxc_databases }}"
+  when:
+    - inventory_hostname == pxc_db_control_node

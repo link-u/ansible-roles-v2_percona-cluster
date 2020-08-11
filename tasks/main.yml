@@ -1,0 +1,17 @@
+---
+# tasks/main.yml (percona-cluster)
+# Prefix : pxc
+
+- name: Pre-check variables
+  import_tasks: pre_check.yml
+  tags: ["pre_check"]
+
+- name: Install tasks
+  import_tasks: install.yml
+  when:
+    - pxc_install_flag | bool
+  tags: ["install"]
+
+- name: Configure tasks
+  import_tasks: configure.yml
+  tags: ["configure"]
