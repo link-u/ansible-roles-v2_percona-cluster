@@ -75,6 +75,7 @@
     login_password: "{{ pxc_root_password }}"
     login_unix_socket: "{{ pxc_socket }}"
     login_host: "localhost"
+  no_log: True
   loop:
     - 127.0.0.1
     - ::1
