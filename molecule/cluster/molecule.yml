@@ -16,6 +16,8 @@ platforms:
     lxc_limit_memory: "2GB"
 
 provisioner:
+  playbooks:
+    create: ${MOLECULE_SCENARIO_DIRECTORY}/playbooks/create.yml
   inventory:
     links:
       group_vars: ${MOLECULE_SCENARIO_DIRECTORY}/group_vars
