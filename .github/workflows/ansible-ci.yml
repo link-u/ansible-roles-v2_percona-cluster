@@ -1,0 +1,59 @@
+name: ansible ci
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - v*
+
+jobs:
+  create-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Install pip3 and tox
+        run: |
+          sudo apt update
+          sudo apt -y install python3 python3-pip python3-setuptools
+          sudo pip3 install tox
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Create tox env list
+        id: set-matrix
+        run: |
+          TOX_ENV=$(python3 ansible-ci-module/scripts/toxenv_to_json.py)
+          echo "::set-output name=matrix::{\"tox_env\":[${TOX_ENV}]}"
+
+  ansible-ci:
+    needs: create-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.create-matrix.outputs.matrix) }}
+    steps:
+      - name: Install LXD and CI tools
+        run: |
+          sudo apt update
+          sudo apt install lxd lxd-tools qemu-block-extra python3 python3-pip python3-setuptools
+
+      - name: Configure LXD
+        run: |
+          sudo lxd init --auto
+
+      - name: Install tox using python3-pip
+        run: |
+          sudo pip3 install tox
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: ansible-ci
+        run: |
+          sudo tox -e ${{ matrix.tox_env }} -c ansible-ci-module/tox.ini
