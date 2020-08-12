@@ -11,8 +11,15 @@
     mode: "0755"
   loop:
     - "{{ __pxc_combined_mycnf_settings['datadir'] }}"
-    - "{{ __pxc_combined_mycnf_settings['log-bin'] }}"
     - "{{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}"
+
+- name: Ensure log-bin directories are present with proper owner
+  file:
+    path: "{{ __pxc_combined_mycnf_settings['log-bin'] }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: "0750"
 
 - name: "Check for existing {{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}/grastate.dat"
   stat:
