@@ -31,20 +31,16 @@
 - name: Add apt repository for Percona
   apt:
     deb: "http://repo.percona.com/apt/{{ pxc_package_name }}"
-  register: __pxc_add_apt_repo
-
-- name: Update apt repository
-  apt:
-    update_cache: True
-  when: __pxc_add_apt_repo.changed | bool
 
 - name: Install python module
   apt:
     name: python3-pymysql
+    update_cache: yes
 
 - name: Install Percona Xtradb Cluster
   apt:
     name: "percona-xtradb-cluster-{{ pxc_version }}"
+    update_cache: yes
   register: installed
 
 - name: Stop percona (mysql) if just installed
