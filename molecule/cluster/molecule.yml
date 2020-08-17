@@ -15,9 +15,10 @@ platforms:
       alias: ubuntu/${MOLECULE_DISTRO}/amd64
     lxc_limit_memory: "2GB"
 
+lxd_commands: |
+  lxc network set lxdbr0 ipv6.address none
+
 provisioner:
-  playbooks:
-    create: ${MOLECULE_SCENARIO_DIRECTORY}/playbooks/create.yml
   inventory:
     links:
       group_vars: ${MOLECULE_SCENARIO_DIRECTORY}/group_vars
