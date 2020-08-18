@@ -4,18 +4,18 @@
 [mysqld]
 ## clustering_settings
 {% if pxc_is_clustered | bool %}
-{% for key, value in __pxc_combined_clustering_settings.items() %}
+{% for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
 {{ key }} = {{ value }}
 {% endfor %}
 {% else %}
-{% for key, value in __pxc_combined_clustering_settings.items() %}
+{% for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
 #{{ key }} = {{ value }}
 {% endfor %}
 {% endif %}
 
 
 ## mycnf_settings
-{% for key, value in __pxc_combined_mycnf_settings.items() %}
+{% for item in (__pxc_combined_mycnf_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
 {% if value is iterable and value is not string %}
 {% for inValue in value %}
 {{ key }} = {{ inValue }}
@@ -27,7 +27,7 @@
 
 
 ## general_settings
-{% for key, value in __pxc_combined_general_settings.items() %}
+{% for item in (__pxc_combined_general_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
 {{ key }} = {{ value }}
 {% endfor %}
 
