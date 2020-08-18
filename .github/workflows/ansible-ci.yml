@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix: ${{ fromJson(needs.create-matrix.outputs.matrix) }}
+      fail-fast: False
     steps:
       - name: Install LXD and CI tools
         run: |
