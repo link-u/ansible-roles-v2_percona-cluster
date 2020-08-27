@@ -5,8 +5,7 @@
 ## Install socat (our builds)
 - name: Pre-install packages
   apt:
-    name:
-      - "gpg"
+    name: ["gpg", "curl"]
     state: present
     update_cache: yes
 
