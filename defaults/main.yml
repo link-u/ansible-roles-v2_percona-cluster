@@ -147,12 +147,12 @@ __pxc_defaults_general_settings:
   explicit_defaults_for_timestamp: "ON"
   long_query_time: 0.1
   log_timestamps: SYSTEM
-  max_connections: "{{ ansible_processor_cores * ansible_processor_count * 200 }}"  # 目安はコア数x200
+  max_connections: "{{ ([(ansible_processor_cores * ansible_processor_count * 200), 100000] | min) }}"  # 目安はコア数x200 (ただし最大値は 100000 でキャップ)
   query_cache_limit: 0
   query_cache_size: 0
   slow_query_log: "ON"
   slow_query_log_file: /var/log/mysql/mysql-slow.log
-  thread_cache_size: "{{ ansible_processor_cores * ansible_processor_count * 100 }}"  # 目安はコア数x100
+  thread_cache_size: "{{ [(ansible_processor_cores * ansible_processor_count * 100), 16384] | min }}"  # 目安はコア数x100 (ただし最大値は 16384 でキャップ)
   default_password_lifetime: 0
   max_prepared_stmt_count: 1000000
   ## 以下は本番サーバー（メモリ16GB以上）と開発サーバー（メモリ16GB未満）で推奨値を分ける
