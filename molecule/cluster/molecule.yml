@@ -1,0 +1,24 @@
+---
+platforms:
+  - name: ${MOLECULE_DISTRO}-${ANSIBLE_VER}-a
+    source:
+      alias: ubuntu/${MOLECULE_DISTRO}/amd64
+    lxc_limit_memory: "2GB"
+
+  - name: ${MOLECULE_DISTRO}-${ANSIBLE_VER}-b
+    source:
+      alias: ubuntu/${MOLECULE_DISTRO}/amd64
+    lxc_limit_memory: "2GB"
+
+  - name: ${MOLECULE_DISTRO}-${ANSIBLE_VER}-c
+    source:
+      alias: ubuntu/${MOLECULE_DISTRO}/amd64
+    lxc_limit_memory: "2GB"
+
+lxd_commands: |
+  lxc network set lxdbr0 ipv6.address none
+
+provisioner:
+  inventory:
+    links:
+      group_vars: ${MOLECULE_SCENARIO_DIRECTORY}/group_vars

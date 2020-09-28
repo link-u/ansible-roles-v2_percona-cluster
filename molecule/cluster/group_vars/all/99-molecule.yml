@@ -1,0 +1,3 @@
+pxc_root_password: "ansible_ci&root"
+pxc_sst_password: "ansible_ci&sst"
+pxc_is_clustered: yes

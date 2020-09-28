@@ -70,6 +70,7 @@
             login_password: "{{ pxc_root_password }}"
             login_unix_socket: "{{ pxc_socket }}"
             login_host: "localhost"
+          no_log: True
       when:
         - (_safe_to_bootstrap_nodes_list | length) != 0
         - _safe_to_bootstrap_nodes_list[0] == inventory_hostname

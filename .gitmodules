@@ -1,0 +1,3 @@
+[submodule "ansible-ci-module"]
+	path = ansible-ci-module
+	url = https://github.com/link-u/ansible-ci-module.git
