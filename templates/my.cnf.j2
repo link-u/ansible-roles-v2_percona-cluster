@@ -28,7 +28,7 @@
 
 ## general_settings
 {% for item in (__pxc_combined_general_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{{ key }} = {{ value }}
+{{ key }} = {{ value.value | default(value) }}
 {% endfor %}
 
 

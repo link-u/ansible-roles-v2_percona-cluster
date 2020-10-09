@@ -84,6 +84,22 @@
   when:
     - inventory_hostname == pxc_db_control_node
 
+## SET GLOBAL 可能なシステム変数を適用するタスク
+#  以下のように pxc_general_settings の定義方法1と2の両方に対応するような書き方となっている
+#
+#  pxc_general_settings:
+#    max_allowed_packet: "41943040"  # 定義方法1
+#    default_time_zone:              # 定義方法2
+#      variable: "time_zone"
+#      value: "UTC"
+#
+#  このような書き方をする理由は, 例えばタイムゾーンを設定するためには, 
+#
+#    * my.cnf では 「default_time_zone = UTC」 と書く
+#    * SET GLOBAL クエリを使う場合は「SET GLOBAL time_zone = UTC;」を実行する
+#
+#  という風に変数名が違う.
+#  これらの事例に対応するために, 定義方法1と2の両方を実装している.
 - name: Update mysql pxc_general_settings (not required to restart)
   mysql_variables:
     connect_timeout: 600
@@ -91,8 +107,8 @@
     login_password: "{{ pxc_root_password }}"
     login_unix_socket: "{{ pxc_socket }}"
     login_host: "localhost"
-    variable: "{{ item.key }}"
-    value: "{{ item.value }}"
+    variable: "{{ item.value.variable | default(item.key) }}"
+    value: "{{ item.value.value | default(item.value) }}"
   loop: "{{ __pxc_combined_general_settings | dict2items }}"
 
 - name: Create mysql users
