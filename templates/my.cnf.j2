@@ -5,30 +5,38 @@
 ## clustering_settings
 {% if pxc_is_clustered | bool %}
 {%   for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{{     key }} = {{ value }}
+{%     if value != None %}
+{{       key }} = {{ value }}
+{%     endif %}
 {%   endfor %}
 {% else %}
 {%   for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-#{{    key }} = {{ value }}
+{%     if value != None %}
+#{{      key }} = {{ value }}
+{%     endif %}
 {%   endfor %}
 {% endif %}
 
 
 ## mycnf_settings
 {% for item in (__pxc_combined_mycnf_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{%   if value is iterable and value is not string %}
-{%     for inValue in value %}
-{{       key }} = {{ inValue }}
-{%     endfor %}
-{%   else %}
-{{       key }} = {{ value }}
+{%   if value != None %}
+{%     if value is iterable and value is not string %}
+{%       for inValue in value %}
+{{         key }} = {{ inValue }}
+{%       endfor %}
+{%     else %}
+{{         key }} = {{ value }}
+{%     endif %}
 {%   endif %}
 {% endfor %}
 
 
 ## general_settings
 {% for item in (__pxc_combined_general_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{{   key }} = {{ value.value | default(value) }}
+{%   if value != None %}
+{{     key }} = {{ value.value | default(value) }}
+{%   endif %}
 {% endfor %}
 
 

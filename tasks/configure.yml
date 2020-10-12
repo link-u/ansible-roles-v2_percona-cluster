@@ -109,6 +109,7 @@
     login_host: "localhost"
     variable: "{{ item.value.variable | default(item.key) }}"
     value: "{{ item.value.value | default(item.value) }}"
+  when: item.value != None
   loop: "{{ __pxc_combined_general_settings | dict2items }}"
 
 - name: Create mysql users
