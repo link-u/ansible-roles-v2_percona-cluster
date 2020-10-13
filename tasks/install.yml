@@ -40,11 +40,11 @@
   apt:
     name: "percona-xtradb-cluster-{{ pxc_version }}"
     update_cache: yes
-  register: installed
+  register: __pxc_installed
 
-- name: Stop percona (mysql) if just installed
+- name: Stop percona (mysql) if just __pxc_installed
   systemd:
     name: mysql.service
     state: stopped
   when:
-    - installed.changed
+    - __pxc_installed.changed
