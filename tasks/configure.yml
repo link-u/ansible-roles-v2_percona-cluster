@@ -49,6 +49,25 @@
   when:
     - __pxc_combined_general_settings['innodb_parallel_doublewrite_path'] != "xb_doublewrite"
 
+## /etc/mysql/timezone_db_is_imported.create_by_ansible.txt が存在するかどうかを確認するタスク
+#  * このファイルの有無でタイムゾーン用のテーブルをインポートしているかどうかを判断できるようになる.
+- name: Check to exist /etc/mysql/timezone_db_is_imported.create_by_ansible.txt
+  stat:
+    path: "/etc/mysql/timezone_db_is_imported.create_by_ansible.txt"
+  register: __pxc_imported_timezone_table
+
+## my.cnf を作成するタスク
+#  * 以下の条件をすべて満たす時, default_time_zone の値を null にする
+#    * /etc/mysql/timezone_db_is_imported.create_by_ansible.txt が存在しない.
+#    * __pxc_combined_general_settings.default_time_zone が定義されている
+#
+#  * 上記の条件についてを付ける理由について
+#    * timezone の設定は PXC が起動した後に実行する必要がある.
+#    * しかし, インストール直後はまだ PXC は起動していない.
+#    * さらに, my.cnf の作成は起動前に一度しておく必要がある.
+#
+#    これらの理由のため, 上記の条件にヒットする場合は一度
+#    タイムゾーン設定を無視して, PXC を起動する必要がある.
 - name: Create my.cnf
   template:
     src: my.cnf.j2
@@ -56,6 +75,19 @@
     owner: root
     group: root
     mode: "0644"
+  vars:
+    ## 少し分かりづらいのでやっていることの解説
+    #  * タイムゾーン用のテーブルがインポートされていない場合
+    #    (つまり, __pxc_imported_timezone_table.stat.exists が false の場合), 
+    #    __pxc_combined_general_settings.default_time_zone を null (Jinja2 では None) にしている.
+    __pxc_combined_general_settings: |
+      {{
+        __pxc_defaults_general_settings |
+        combine(pxc_general_settings, recursive=True) |
+        combine(
+          ( __pxc_imported_timezone_table.stat.exists) | ternary({}, { 'default_time_zone': None } ),
+          recursive=True
+        ) }}
 
 - name: Bootstrap cluster
   import_tasks: bootstrap.yml
@@ -83,6 +115,24 @@
     - localhost
   when:
     - inventory_hostname == pxc_db_control_node
+
+## MySQL のタイムゾーンを設定するためのテーブルをインポートするタスク
+- name: Add timezone table
+  import_tasks: add_timezone_table.yml
+  when:
+    - __pxc_combined_general_settings.default_time_zone is defined
+    - __pxc_combined_general_settings.default_time_zone != None
+    - not __pxc_imported_timezone_table.stat.exists
+
+## my.cnf を改めて作成するタスク
+#  * こちらは default_time_zone もちゃんと反映させる.
+- name: Re-create my.cnf
+  template:
+    src: my.cnf.j2
+    dest: "{{ pxc_mycnf_path }}"
+    owner: root
+    group: root
+    mode: "0644"
 
 ## SET GLOBAL 可能なシステム変数を適用するタスク
 #  以下のように pxc_general_settings の定義方法1と2の両方に対応するような書き方となっている
