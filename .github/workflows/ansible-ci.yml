@@ -27,8 +27,8 @@ jobs:
       - name: Create tox env list
         id: set-matrix
         run: |
-          TOX_ENV=$(python3 ansible-ci-module/scripts/toxenv_to_json.py)
-          echo "::set-output name=matrix::{\"tox_env\":[${TOX_ENV}]}"
+          MATRIX=$(python3 ansible-ci-module/scripts/matrix.py)
+          echo "::set-output name=matrix::${MATRIX}"
 
   ansible-ci:
     needs: create-matrix
@@ -58,7 +58,7 @@ jobs:
       - name: ansible-ci
         run: |
           if [ -f ./tox.ini ]; then
-            sudo tox -e ${{ matrix.tox_env }} -c tox.ini
+            sudo MOLECULE_SCENARIO=${{ matrix.scenario }} tox -e ${{ matrix.tox_env }} -c tox.ini
           else
-            sudo tox -e ${{ matrix.tox_env }} -c ansible-ci-module/tox.ini
+            sudo MOLECULE_SCENARIO=${{ matrix.scenario }} tox -e ${{ matrix.tox_env }} -c ansible-ci-module/tox.ini
           fi
