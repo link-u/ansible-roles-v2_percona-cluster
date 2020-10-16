@@ -4,16 +4,25 @@ platforms:
     source:
       alias: ubuntu/${MOLECULE_DISTRO}/amd64
     lxc_limit_memory: "2GB"
+    host_vars:
+      local_ipv4: "172.29.95.31"
+      local_ipv4_prefix: "24"
 
   - name: ${MOLECULE_DISTRO}-${ANSIBLE_VER}-b
     source:
       alias: ubuntu/${MOLECULE_DISTRO}/amd64
     lxc_limit_memory: "2GB"
+    host_vars:
+      local_ipv4: "172.29.95.32"
+      local_ipv4_prefix: "24"
 
   - name: ${MOLECULE_DISTRO}-${ANSIBLE_VER}-c
     source:
       alias: ubuntu/${MOLECULE_DISTRO}/amd64
     lxc_limit_memory: "2GB"
+    host_vars:
+      local_ipv4: "172.29.95.33"
+      local_ipv4_prefix: "24"
 
 lxd_commands: |
   lxc network set lxdbr0 ipv6.address none
