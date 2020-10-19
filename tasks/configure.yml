@@ -61,7 +61,7 @@
 #    * /etc/mysql/timezone_db_is_imported.create_by_ansible.txt が存在しない.
 #    * __pxc_combined_general_settings.default_time_zone が定義されている
 #
-#  * 上記の条件についてを付ける理由について
+#  * 上記の条件を付ける理由について
 #    * timezone の設定は PXC が起動した後に実行する必要がある.
 #    * しかし, インストール直後はまだ PXC は起動していない.
 #    * さらに, my.cnf の作成は起動前に一度しておく必要がある.
