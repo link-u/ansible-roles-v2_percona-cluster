@@ -1,5 +1,7 @@
 # Percona XtraDB Cluster
 
+![ansible ci](https://github.com/link-u/ansible-roles-v2_percona-cluster/workflows/ansible%20ci/badge.svg)
+
 ## 概要
 Percona XtraDB Cluster をインストールするための ansible role について各変数の意味や使い方を説明している.
 また, bootstrap.yml の使い方については[別の README](README_others/README_bootstrap.md) として用意している.
