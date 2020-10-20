@@ -12,9 +12,11 @@
 
 ## timezone テーブルをインポートするタスク
 - name: Import timezone table from SQL query
-  shell: >-
-    set -o pipefail &&
-    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -p{{ pxc_root_password }} mysql
+  command: >-
+    bash -c "
+      set -o pipefail &&
+      mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -p{{ pxc_root_password }} mysql
+    "
   no_log: yes   # pxc_root_password をログに出力させないようにするために設定
   when:
     - inventory_hostname == pxc_db_control_node
