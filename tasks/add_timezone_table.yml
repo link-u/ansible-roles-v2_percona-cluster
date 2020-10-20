@@ -8,6 +8,7 @@
   register: __pxc_check_timezone
   no_log: yes   # pxc_root_password をログに出力させないようにするために設定
   changed_when: no
+  check_mode: no
 
 ## timezone テーブルをインポートするタスク
 - name: Import timezone table from SQL query
