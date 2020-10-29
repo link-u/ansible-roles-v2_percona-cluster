@@ -1,4 +1,4 @@
-pxc_root_password: "ansible_ci&root"
+pxc_root_password: "ansible_ci root"  ## パスワードに半角スペースを入れた場合もついでにテスト
 pxc_is_clustered: no
 pxc_general_settings: 
   slow_query_log: "ON"
