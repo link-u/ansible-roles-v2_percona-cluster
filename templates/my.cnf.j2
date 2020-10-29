@@ -5,13 +5,13 @@
 ## clustering_settings
 {% if pxc_is_clustered | bool %}
 {%   for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{%     if value != None %}
+{%     if value != None %}{# value が None (yml では null) の時は my.cnf に反映させない. #}
 {{       key }} = {{ value }}
 {%     endif %}
 {%   endfor %}
-{% else %}
+{% else %}{# スタンドアロンモードとして動かすため必要のない設定だが, コメントアウト状態で設定を残したいため一応用意することにした. #}
 {%   for item in (__pxc_combined_clustering_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{%     if value != None %}
+{%     if value != None %}{# value が None (yml では null) の時は my.cnf に反映させない. #}
 #{{      key }} = {{ value }}
 {%     endif %}
 {%   endfor %}
@@ -20,12 +20,12 @@
 
 ## mycnf_settings
 {% for item in (__pxc_combined_mycnf_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{%   if value != None %}
-{%     if value is iterable and value is not string %}
+{%   if value != None %}{# value が None (yml では null) の時は my.cnf に反映させない. #}
+{%     if value is iterable and value is not string %}{# value がリストの時. 例: ignore-db-dir 等は key と value が1対多の関係なのでこの if 文が必要. #}
 {%       for inValue in value %}
 {{         key }} = {{ inValue }}
 {%       endfor %}
-{%     else %}
+{%     else %}{# value がリストでない時. #}
 {{         key }} = {{ value }}
 {%     endif %}
 {%   endif %}
@@ -34,7 +34,8 @@
 
 ## general_settings
 {% for item in (__pxc_combined_general_settings | dictsort(by='key')) %}{% set key = item[0] %}{% set value = item[1] %}
-{%   if value != None %}
+{%   if value != None %}{# value が None (yml では null) の時は my.cnf に反映させない. #}
+{#     ↓ の書き方をすることについて, 詳しい説明は tasks/configure.yml の 「Update mysql pxc_general_settings (not required to restart)」 タスクを参照 #}
 {{     key }} = {{ value.value | default(value) }}
 {%   endif %}
 {% endfor %}
