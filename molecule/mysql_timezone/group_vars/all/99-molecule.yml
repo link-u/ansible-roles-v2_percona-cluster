@@ -1,0 +1,6 @@
+pxc_root_password: "ansible_ci&root"
+pxc_is_clustered: no
+pxc_general_settings:
+  default_time_zone: 
+    variable: "time_zone"
+    value: "UTC"
