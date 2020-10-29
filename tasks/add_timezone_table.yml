@@ -4,7 +4,7 @@
 
 ## timezone テーブルがインポートされているかどうかのチェック
 - name: Check installed timezone table
-  command: "mysql -uroot -p{{ pxc_root_password }} -e 'SELECT * FROM mysql.time_zone_name;' -B"
+  command: "mysql -uroot '-p{{ pxc_root_password }}' -e 'SELECT * FROM mysql.time_zone_name;' -B"
   register: __pxc_check_timezone
   no_log: yes   # pxc_root_password をログに出力させないようにするために設定
   changed_when: no
@@ -15,7 +15,7 @@
   command: >-
     bash -c "
       set -o pipefail &&
-      mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -p{{ pxc_root_password }} mysql
+      mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot '-p{{ pxc_root_password }}' mysql
     "
   no_log: yes   # pxc_root_password をログに出力させないようにするために設定
   when:
