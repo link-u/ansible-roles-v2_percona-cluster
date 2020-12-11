@@ -24,7 +24,7 @@ pxc_is_clustered: "{{ percona_cluster_is_clustered | default( (pxc_hosts | lengt
 ### デフォルでの指定ノードについて
 #### 1. クラスタ稼働の場合はプレイ対象リストにおける最初のホストを指定
 #### 2. スタンドアロン稼働の場合は ansible 実行対象のホストを指定
-pxc_db_control_node: "{% if pxc_is_clustered %}{{ ansible_play_hosts_all[0] }}{% else %}{{ inventory_hostname }}{% endif %}"
+pxc_db_control_node: "{{ pxc_is_clustered | ternary(ansible_play_hosts_all[0], inventory_hostname) }}"
 
 ## NUMA環境下のメモリ割り当て改善設定
 ### innodb_numa_interleaveとflush_cachesの設定値に使用する
@@ -160,12 +160,12 @@ __pxc_defaults_general_settings:
   default_password_lifetime: 0
   max_prepared_stmt_count: 1000000
   ## 以下は本番サーバー（メモリ16GB以上）と開発サーバー（メモリ16GB未満）で推奨値を分ける
-  max_heap_table_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 128 * 1024 * 1024 }}{% else %}{{ 16 * 1024 * 1024 }}{% endif %}" # 128MB or 16MB
-  tmp_table_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 128 * 1024 * 1024 }}{% else %}{{ 16 * 1024 * 1024 }}{% endif %}"      # 128MB or 16MB
-  read_buffer_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 4 * 1024 * 1024 }}{% else %}{{ 128 * 1024 }}{% endif %}"            # 4MB or 128KB
-  read_rnd_buffer_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 4 * 1024 * 1024 }}{% else %}{{ 256 * 1024 }}{% endif %}"        # 4MB or 256KB
-  join_buffer_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 4 * 1024 * 1024 }}{% else %}{{ 256 * 1024 }}{% endif %}"            # 4MB or 256KB
-  sort_buffer_size: "{% if ansible_memtotal_mb >= 16 * 1024 %}{{ 4 * 1024 * 1024 }}{% else %}{{ 256 * 1024 }}{% endif %}"            # 4MB or 256KB
+  max_heap_table_size:  "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(128 * 1024 * 1024, 16 * 1024 * 1024) }}" # 128MB or 16MB
+  tmp_table_size:       "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(128 * 1024 * 1024, 16 * 1024 * 1024) }}" # 128MB or 16MB
+  read_buffer_size:     "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(4 * 1024 * 1024, 128 * 1024) }}"         # 4MB or 128KB
+  read_rnd_buffer_size: "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(4 * 1024 * 1024, 256 * 1024) }}"         # 4MB or 256KB
+  join_buffer_size:     "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(4 * 1024 * 1024, 256 * 1024) }}"         # 4MB or 256KB
+  sort_buffer_size:     "{{ (ansible_memtotal_mb >= 16 * 1024) | ternary(4 * 1024 * 1024, 256 * 1024) }}"         # 4MB or 256KB
   sync_binlog: 0
 pxc_general_settings: "{{ percona_cluster_general_settings | default({}) }}"
 __pxc_combined_general_settings: "{{ __pxc_defaults_general_settings | combine(pxc_general_settings, recursive=True) }}"
