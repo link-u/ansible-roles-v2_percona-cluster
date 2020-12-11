@@ -142,7 +142,11 @@ __pxc_defaults_general_settings:
   innodb_compression_level: 6
   innodb_parallel_doublewrite_path: xb_doublewrite # ダブルライトバッファのパスを変更する
   ## メモリの5割くらい、chunk_size(128MB) * instances の倍数でしか変更できない
-  innodb_buffer_pool_size: "{{ ((((ansible_memtotal_mb * 1024 * 1024 * 0.5) / (128 * 1024 * 1024 * __pxc_combined_mycnf_settings.innodb_buffer_pool_instances|int))|round(0, 'ceil')) * 128 * 1024 * 1024 * __pxc_combined_mycnf_settings.innodb_buffer_pool_instances|int)|int }}"
+  innodb_buffer_pool_size: >-
+    {%- set __memory = ansible_memtotal_mb * 1024 * 1024 -%}
+    {%- set __pool_instances_mul_128mb = (__pxc_combined_mycnf_settings.innodb_buffer_pool_instances | int) * 128 * 1024 * 1024 -%}
+    {%- set __pool_size = __memory * 0.5 -%}
+    {{ ( (__pool_size / __pool_instances_mul_128mb) | round(0, 'ceil') | int ) * __pool_instances_mul_128mb }}
   expire_logs_days: 3
   explicit_defaults_for_timestamp: "ON"
   long_query_time: 0.1
