@@ -188,3 +188,6 @@
   loop: "{{ pxc_databases }}"
   when:
     - inventory_hostname == pxc_db_control_node
+
+- name: Setting logrotate
+  import_tasks: logrotate.yml
