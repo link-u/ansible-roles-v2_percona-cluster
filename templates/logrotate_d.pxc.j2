@@ -4,7 +4,7 @@
 {% set _error_log = (__pxc_combined_mycnf_settings['log-error'] | default('/var/log/mysql/error.log') ) %}
 {% set _slow_query_log = (__pxc_combined_mycnf_settings['slow_query_log_file'] | default('/var/log/mysql/mysql-slow.log') ) %}
 
-{{ _error_log }} {{ _slow_query_log }} {
+{{ _error_log }} {
     daily
     rotate 60
     missingok
@@ -23,5 +23,39 @@
         else
             $MYADMIN flush-logs
         fi
+
+        LOG_FILE="{{ _error_log }}"
+        LOG_DIR="$(dirname "${LOG_FILE}")/$(basename "${LOG_FILE}" .log)"
+        mkdir -p "${LOG_DIR}"
+        mv "${LOG_FILE}"-*.gz "${LOG_DIR}"
+        chown -R mysql:adm "${LOG_DIR}"
+    endscript
+}
+
+{{ _slow_query_log }} {
+    daily
+    rotate 60
+    missingok
+    create 640 mysql adm
+    compress
+    delaycompress
+    sharedscripts
+    dateext
+    postrotate
+        test -x /usr/bin/mysqladmin || exit 0
+        MYADMIN="mysqladmin --defaults-file=/etc/mysql/logrotate/logflush_login.cnf"
+        if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
+            if ps cax | grep -q mysqld; then
+                exit 1
+            fi
+        else
+            $MYADMIN flush-logs
+        fi
+
+        LOG_FILE="{{ _slow_query_log }}"
+        LOG_DIR="$(dirname "${LOG_FILE}")/$(basename "${LOG_FILE}" .log)"
+        mkdir -p "${LOG_DIR}"
+        mv "${LOG_FILE}"-*.gz "${LOG_DIR}"
+        chown -R mysql:adm "${LOG_DIR}"
     endscript
 }
