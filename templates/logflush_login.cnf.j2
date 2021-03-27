@@ -1,0 +1,10 @@
+{{ ansible_managed | comment }}
+
+## logrotate 後に log の flush を実行するためのユーザ「logflush」がログインするための設定
+
+{# クラスタモードの時とスタンドアロンモードの時でパスワードの生成方法を変える #}
+{% set __hash_src = ( pxc_is_clustered | ternary((pxc_hosts | join(',')), inventory_hostname) ) %}
+[client]
+user = 'logflush'
+password = '{{ __password }}'
+host = 'localhost'

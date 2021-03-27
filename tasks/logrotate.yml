@@ -1,0 +1,43 @@
+---
+## error.log や slow.log などのローテーションを設定するタスク
+
+- name: "Create directory for logrotate settings"
+  file:
+    path: "/etc/mysql/logrotate"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0700"
+
+- name: "Create logflush user and deploy conf file"
+  vars:
+    # クラスタモードの時とスタンドアロンモードの時でパスワードの生成方法を変える
+    __hash_src: "{{ pxc_is_clustered | ternary((pxc_hosts | join(',')), inventory_hostname) }}"
+    __password: "{{ (__hash_src ~ 'logflush') | hash('md5') }}"
+  block:
+    - name: "Deploy login conf file (for logflush user)"
+      template:
+        src: "logflush_login.cnf.j2"
+        dest: "/etc/mysql/logrotate/logflush_login.cnf"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: "Create mysql users (for logflush user)"
+      mysql_user:
+        name: "logflush"
+        password: "{{ __password }}"
+        host: "localhost"
+        priv: "*.*:RELOAD"
+        login_user: root
+        login_password: "{{ pxc_root_password }}"
+        login_unix_socket: "{{ pxc_socket }}"
+        login_host: "localhost"
+
+    - name: "Deploy logrotate conf file"
+      template:
+        src: "logrotate_d.pxc.j2"
+        dest: "/etc/logrotate.d/percona-xtradb-cluster-server-5.7"
+        owner: root
+        group: root
+        mode: "0644"
