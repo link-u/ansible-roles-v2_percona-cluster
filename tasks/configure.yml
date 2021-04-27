@@ -15,7 +15,7 @@
 
 - name: Ensure log-bin directories are present with proper owner
   file:
-    path: "{{ __pxc_combined_mycnf_settings['log-bin'] }}"
+    path: "{{ __pxc_combined_mycnf_settings['log-bin'] | dirname }}"
     state: directory
     owner: mysql
     group: mysql
