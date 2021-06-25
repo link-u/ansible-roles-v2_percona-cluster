@@ -19,7 +19,6 @@
     state: directory
     owner: mysql
     group: mysql
-    mode: "0750"
 
 - name: "Check for existing {{ __pxc_combined_clustering_settings['wsrep_data_home_dir'] }}/grastate.dat"
   stat:
