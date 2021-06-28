@@ -102,7 +102,7 @@ pxc_clustering_settings:
   wsrep_log_conflicts: 1
   wsrep_node_address: "{{ local_ipv4 }}"
   wsrep_node_name: "{{ inventory_hostname }}"
-  wsrep_slave_threads: "{{ ansible_processor_cores * ansible_processor_count}}"  # 目安はCPUコアx2だがちょっと多いので減らす
+  wsrep_slave_threads: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc))}}"  # 目安はCPUコアx2だがちょっと多いので減らす
   wsrep_sst_method: xtrabackup-v2
   wsrep_sst_auth: '"{{ pxc_sst_user }}:{{ pxc_sst_password }}"'
   wsrep_data_home_dir: /var/lib/mysql
@@ -124,7 +124,7 @@ pxc_mycnf_settings:
   log-bin: /var/lib/mysql/mysql-bin
   log-error: /var/log/mysql/error.log
   socket: "{{ pxc_socket }}"
-  table_open_cache_instances: "{{ ansible_processor_cores * ansible_processor_count * 2 }}"  # コア数×2
+  table_open_cache_instances: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) * 2 }}"  # コア数×2
   thread_handling: one-thread-per-connection # perconaのウリである pool-of-threads を指定したいが、謎のメモリリーク問題により断念
   pid-file: "{{ pxc_pid_file }}"
   open_files_limit: 100000
@@ -134,23 +134,23 @@ pxc_mycnf_settings:
   skip_name_resolve: 1
   symbolic-links: 0
   performance_schema: "OFF"
-  table_open_cache: "{{ ansible_processor_cores * ansible_processor_count * 5000 }}"  # 目安はコア数x5000
+  table_open_cache: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) * 5000 }}"  # 目安はコア数x5000
   binlog_format: ROW
   default_storage_engine: InnoDB
   pxc_strict_mode: ENFORCING
   innodb_autoinc_lock_mode: 2
-  innodb_buffer_pool_instances: "{{ [(ansible_processor_cores * ansible_processor_count * 2), 64] | min }}" # コア数の2倍か64の小さい方
+  innodb_buffer_pool_instances: "{{ [(((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) * 2), 64] | min }}" # コア数の2倍か64の小さい方
   innodb-checksum-algorithm: strict_crc32
   innodb_flush_method: O_DIRECT_NO_FSYNC
   innodb_log_buffer_size: 32M  # 16-128MB
   innodb_log_file_size: 128M
-  innodb_log_files_in_group: "{{ ansible_processor_cores * ansible_processor_count }}"  # コア数
+  innodb_log_files_in_group: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) }}"  # コア数
   innodb_log_group_home_dir: /var/lib/mysql
   innodb_numa_interleave: "{{ pxc_enable_innodb_numa_interleave }}"
-  innodb_page_cleaners: "{{ [(ansible_processor_cores * ansible_processor_count), 32] | min }}"    # コア数か32の小さい方
-  innodb_purge_threads: "{{ [(ansible_processor_cores * ansible_processor_count), 32] | min }}"    # コア数か32の小さい方
-  innodb_read_io_threads: "{{ [(ansible_processor_cores * ansible_processor_count), 32] | min }}"  # コア数か32の小さい方
-  innodb_write_io_threads: "{{ [(ansible_processor_cores * ansible_processor_count), 32] | min }}" # コア数か32の小さい方
+  innodb_page_cleaners: "{{ [(((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc))), 32] | min }}"    # コア数か32の小さい方
+  innodb_purge_threads: "{{ [(((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc))), 32] | min }}"    # コア数か32の小さい方
+  innodb_read_io_threads: "{{ [(((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc))), 32] | min }}"  # コア数か32の小さい方
+  innodb_write_io_threads: "{{ [(((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc))), 32] | min }}" # コア数か32の小さい方
 
 ## general_settings
 #   * 辞書のマージに対応
@@ -175,12 +175,12 @@ pxc_general_settings:
   explicit_defaults_for_timestamp: "ON"
   long_query_time: 0.1
   log_timestamps: SYSTEM
-  max_connections: "{{ ansible_processor_cores * ansible_processor_count * 200 }}"  # 目安はコア数x200
+  max_connections: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) * 200 }}"  # 目安はコア数x200
   query_cache_limit: 0
   query_cache_size: 0
   slow_query_log: "ON"
   slow_query_log_file: /var/log/mysql/mysql-slow.log
-  thread_cache_size: "{{ ansible_processor_cores * ansible_processor_count * 100 }}"  # 目安はコア数x100
+  thread_cache_size: "{{ ((ansible_virtualization_role == 'host') | ternary(ansible_processor_count * ansible_processor_cores, ansible_processor_nproc)) * 100 }}"  # 目安はコア数x100
   default_password_lifetime: 0
   max_prepared_stmt_count: 1000000
   ## 以下は本番サーバー（メモリ16GB以上）と開発サーバー（メモリ16GB未満）で推奨値を分ける
